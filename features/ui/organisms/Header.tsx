@@ -14,6 +14,8 @@ import {
   MapPin,
   ChevronDown,
   HelpCircle,
+  LogIn,
+  Package,
 } from "lucide-react";
 import { useCartStore } from "@/features/cart/store/cartStore";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -84,30 +86,10 @@ export function Header() {
           isScrolled ? "bg-primary shadow-xl" : "bg-primary"
         )}
       >
-        {/* TOP BAR - Desktop Only */}
-        <div className="hidden lg:flex items-center justify-between border-b border-white/10 px-4 h-9 text-[11px] font-medium text-white/80 bg-primary/95">
-          <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5 hover:text-white cursor-pointer transition-colors">
-              <MapPin className="h-3.5 w-3.5" />
-              Enviar a Lima, Perú
-            </span>
-          </div>
-          <div className="flex items-center gap-6">
-            <span className="text-secondary font-bold tracking-wide uppercase">
-              🚀 Envíos gratis a todo el Perú en compras mayores a S/ 200
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link href="#" className="flex items-center gap-1 hover:text-white transition-colors">
-              <HelpCircle className="h-3.5 w-3.5" /> Ayuda
-            </Link>
-            <Link href="#" className="hover:text-white transition-colors">Vender</Link>
-          </div>
-        </div>
 
         {/* MAIN BAR */}
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-20 gap-4 lg:gap-8">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 md:h-24 gap-4 md:gap-6 lg:gap-10">
 
             {/* Mobile Hamburger */}
             <button
@@ -130,18 +112,19 @@ export function Header() {
             </Link>
 
             {/* Category Trigger (Desktop) */}
-            <div className="hidden lg:flex items-center group relative shrink-0">
-              <button className="flex items-center gap-2 text-white/90 hover:text-white font-medium py-2 px-3 rounded-lg hover:bg-white/10 transition-colors">
+            <div className="hidden lg:flex items-center group relative shrink-0 z-50">
+              <button className="flex items-center gap-2 text-white/90 hover:text-white font-medium py-2.5 px-4 rounded-xl hover:bg-white/10 transition-all duration-200">
                 <Menu className="h-5 w-5" />
-                <span>Categorías</span>
-                <ChevronDown className="h-4 w-4" />
+                <span className="text-[15px]">Categorías</span>
+                <ChevronDown className="h-4 w-4 ml-1 transition-transform duration-200 group-hover:rotate-180 text-white/70" />
               </button>
               {/* Fake Dropdown */}
-              <div className="absolute top-full left-0 w-64 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                <div className="bg-white rounded-xl shadow-2xl border p-2 flex flex-col gap-1">
+              <div className="absolute top-full left-0 w-64 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-left group-hover:translate-y-0 translate-y-2">
+                <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-2.5 flex flex-col gap-1">
                   {CATEGORIES.map(c => (
-                    <Link key={c} href={`/products?category=${c.toLowerCase()}`} className="px-4 py-2 hover:bg-slate-100 rounded-lg text-sm text-slate-700 font-medium transition-colors">
+                    <Link key={c} href={`/products?category=${c.toLowerCase()}`} className="px-4 py-3 hover:bg-slate-50 rounded-xl text-[14px] text-slate-700 font-medium transition-colors flex items-center justify-between group/link">
                       {c}
+                      <ChevronDown className="h-4 w-4 -rotate-90 opacity-0 -translate-x-2 group-hover/link:opacity-100 group-hover/link:translate-x-0 transition-all duration-200 text-slate-400" />
                     </Link>
                   ))}
                 </div>
@@ -155,7 +138,7 @@ export function Header() {
             )}>
               <form onSubmit={handleSearchSubmit} className="relative w-full">
                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Search className="h-5 w-5 text-muted-foreground" />
+                  <Search className="h-5 w-5 text-slate-400" />
                 </div>
                 <input
                   type="text"
@@ -163,10 +146,10 @@ export function Header() {
                   onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white text-foreground rounded-full pl-12 pr-4 h-11 border-none focus:ring-4 focus:ring-accent/50 outline-none text-sm placeholder:text-muted-foreground transition-shadow"
-                  placeholder="Buscar laptops, audífonos, gaming, marcas..."
+                  className="w-full bg-white text-foreground rounded-full pl-11 pr-28 h-12 md:h-14 border-none focus:ring-4 focus:ring-accent/40 outline-none text-[15px] placeholder:text-slate-400 shadow-sm transition-all duration-200"
+                  placeholder="Busca marcas, productos y más..."
                 />
-                <button type="submit" className="absolute inset-y-1 right-1 px-4 bg-accent hover:bg-accent/90 text-white rounded-full text-sm font-bold transition-colors">
+                <button type="submit" className="absolute inset-y-1.5 right-1.5 md:inset-y-2 md:right-2 px-6 bg-accent hover:bg-accent/90 text-white rounded-full text-[14px] font-bold transition-transform active:scale-95 shadow-sm">
                   Buscar
                 </button>
               </form>
@@ -198,43 +181,55 @@ export function Header() {
             </div>
 
             {/* Right Cluster (Account, Cart) */}
-            <div className="flex items-center gap-2 sm:gap-4 shrink-0 relative z-10">
+            <div className="flex items-center gap-4 md:gap-6 lg:gap-10 shrink-0 relative z-10">
 
               {/* Account Dropdown */}
-              <div className="hidden lg:flex items-center group relative">
-                {isAuthenticated && user ? (
-                  <>
-                    <Link href="#" className="flex items-center gap-3 text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
-                      <div className="flex items-center justify-center h-9 w-9 rounded-full bg-white/20 font-bold text-sm">
-                        {user.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div className="flex flex-col leading-tight">
-                        <span className="text-[11px] text-white/70">Hola, {user.name}</span>
-                        <span className="text-sm font-bold">Mi cuenta <ChevronDown className="inline h-3 w-3" /></span>
-                      </div>
+              <div className="hidden lg:flex items-center group relative pb-2 -mb-2 z-50">
+                <button className="flex items-center gap-3 text-white hover:bg-white/10 px-2 py-1.5 md:px-3 md:py-2.5 rounded-2xl transition-colors text-left focus:outline-none">
+                  <div className="flex items-center justify-center h-10 w-10 rounded-full bg-white/15 border border-white/10 font-bold text-[15px] shadow-sm">
+                    {isAuthenticated && user ? user.name.charAt(0).toUpperCase() : <User className="h-5 w-5" />}
+                  </div>
+                  <div className="flex flex-col leading-tight">
+                    {isAuthenticated && user ? (
+                      <span className="text-[12px] text-white/80 font-medium">Hola, {user.name.split(' ')[0]}</span>
+                    ) : (
+                      <span className="text-[12px] text-white/80 font-medium">Bienvenido</span>
+                    )}
+                    <span className="text-[14px] font-bold flex items-center gap-1">
+                      Mi cuenta <ChevronDown className="h-4 w-4 transition-transform duration-300 group-hover:rotate-180 text-white/70" />
+                    </span>
+                  </div>
+                </button>
+
+                <div className="absolute top-[100%] left-1/2 -translate-x-1/2 w-64 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top group-hover:translate-y-0 translate-y-2">
+                  <div className="bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 p-2.5 flex flex-col gap-1.5 relative overflow-hidden">
+
+                    {!isAuthenticated && (
+                      <Link href="/login" className="px-4 py-2.5 hover:bg-primary/5 rounded-xl text-[14px] font-semibold text-primary flex items-center gap-3 transition-colors mb-1">
+                        <LogIn className="h-5 w-5" /> Iniciar Sesión
+                      </Link>
+                    )}
+
+                    <Link href="/profile" className="px-4 py-2.5 hover:bg-slate-50 rounded-xl text-[14px] font-medium text-slate-700 flex items-center gap-3 transition-colors">
+                      <User className="h-5 w-5 text-slate-400" /> Perfil
                     </Link>
-                    <div className="absolute top-full right-0 w-48 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                      <div className="bg-white rounded-xl shadow-2xl border p-2 flex flex-col gap-1">
-                        <Link href="#" className="px-4 py-2 hover:bg-slate-100 rounded-lg text-sm font-medium text-slate-700">Mis pedidos</Link>
-                        <Link href="#" className="px-4 py-2 hover:bg-slate-100 rounded-lg text-sm font-medium text-slate-700">Favoritos</Link>
-                        <div className="h-px bg-slate-100 my-1" />
-                        <button onClick={logout} className="px-4 py-2 hover:bg-destructive/10 text-destructive rounded-lg text-sm font-medium text-left flex items-center gap-2">
-                          <LogOut className="h-4 w-4" /> Cerrar sesión
+                    <Link href="/orders" className="px-4 py-2.5 hover:bg-slate-50 rounded-xl text-[14px] font-medium text-slate-700 flex items-center gap-3 transition-colors">
+                      <Package className="h-5 w-5 text-slate-400" /> Mis pedidos
+                    </Link>
+                    <Link href="/addresses" className="px-4 py-2.5 hover:bg-slate-50 rounded-xl text-[14px] font-medium text-slate-700 flex items-center gap-3 transition-colors">
+                      <MapPin className="h-5 w-5 text-slate-400" /> Direcciones de entrega
+                    </Link>
+
+                    {isAuthenticated && (
+                      <>
+                        <div className="h-px bg-slate-100 my-1 mx-2" />
+                        <button onClick={logout} className="px-4 py-2.5 hover:bg-destructive/10 text-destructive rounded-xl text-[14px] font-medium text-left flex items-center gap-3 transition-colors">
+                          <LogOut className="h-5 w-5" /> Cerrar sesión
                         </button>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <Link href="/login" className="flex items-center gap-3 text-white hover:bg-white/10 p-2 rounded-xl transition-colors">
-                    <div className="flex items-center justify-center h-9 w-9 rounded-full bg-white/10">
-                      <User className="h-5 w-5" />
-                    </div>
-                    <div className="flex flex-col leading-tight">
-                      <span className="text-[11px] text-white/70">Bienvenido</span>
-                      <span className="text-sm font-bold">Ingresa / Regístrate</span>
-                    </div>
-                  </Link>
-                )}
+                      </>
+                    )}
+                  </div>
+                </div>
               </div>
 
               {/* Mobile Profile Icon */}
@@ -251,32 +246,30 @@ export function Header() {
               </div>
 
               {/* Cart Button */}
-              <button
-                onClick={toggleCart}
-                className="group flex items-center gap-3 bg-white/10 hover:bg-white/20 p-2 pr-3 sm:px-3 sm:py-2.5 rounded-xl transition-colors relative"
-                aria-label={`Carrito con ${totalItems} productos`}
-              >
-                <div className="relative flex items-center justify-center">
-                  <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6 text-white group-hover:scale-110 transition-transform" />
-                  <AnimatePresence>
-                    {totalItems > 0 && (
-                      <motion.span
-                        key="badge"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        exit={{ scale: 0 }}
-                        className="absolute -top-2 -right-2 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent text-white text-[11px] font-bold border-2 border-primary"
-                      >
-                        {totalItems > 99 ? "99+" : totalItems}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
-                <div className="hidden sm:flex flex-col items-start leading-tight">
-                  <span className="text-[10px] text-white/70 font-medium">Mi carrito</span>
-                  <span className="text-sm font-bold text-white">S/ {totalPrice.toLocaleString('es-PE')}</span>
-                </div>
-              </button>
+              <div className="flex items-center justify-center">
+                <Link
+                  href="/cart"
+                  className="group flex items-center justify-center h-11 w-11 md:h-12 md:w-12 bg-white/15 hover:bg-white/25 border border-white/10 rounded-2xl transition-all shadow-sm relative shrink-0"
+                  aria-label={`Carrito con ${totalItems} productos`}
+                >
+                  <div className="relative flex items-center justify-center">
+                    <ShoppingCart className="h-5 w-5 md:h-[22px] md:w-[22px] text-white group-hover:scale-110 transition-transform" />
+                    <AnimatePresence>
+                      {totalItems > 0 && (
+                        <motion.span
+                          key="badge"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          className="absolute -top-2.5 -right-2.5 flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent text-white text-[11px] font-bold border-2 border-primary"
+                        >
+                          {totalItems > 99 ? "99+" : totalItems}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </Link>
+              </div>
 
             </div>
           </div>
