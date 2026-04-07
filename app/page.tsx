@@ -154,7 +154,7 @@ export default async function HomePage() {
 
                 {/* Floating badge top left */}
                 <div className="absolute top-4 left-4 bg-accent text-white rounded-lg px-3 py-1.5 text-xs font-bold shadow-md">
-                  ⚡ Hasta 30% OFF
+                  Hasta 30% OFF
                 </div>
               </div>
             </div>
@@ -186,37 +186,6 @@ export default async function HomePage() {
                   <p className="text-xs text-muted-foreground mt-0.5">{benefit.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── CATEGORIES ─── */}
-      <section className="py-16 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-10">
-            <h2 className="font-display font-extrabold text-3xl lg:text-4xl text-foreground mb-3">
-              Explora por categoría
-            </h2>
-            <p className="text-muted-foreground">
-              Encuentra exactamente lo que buscas
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
-            {CATEGORIES.map((cat) => (
-              <Link
-                key={cat.id}
-                href={cat.href}
-                className="group flex flex-col items-center gap-3 p-4 lg:p-5 rounded-2xl border border-border bg-card hover:border-secondary hover:shadow-soft transition-all duration-300 hover:-translate-y-1"
-              >
-                <div className={`p-3 rounded-xl ${cat.color} transition-transform duration-300 group-hover:scale-110`}>
-                  <cat.icon className="h-6 w-6 lg:h-7 lg:w-7" />
-                </div>
-                <span className="text-xs lg:text-sm font-semibold text-foreground text-center leading-tight">
-                  {cat.name}
-                </span>
-              </Link>
             ))}
           </div>
         </div>
