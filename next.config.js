@@ -6,6 +6,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "amzn-dtt-s3-rob.s3.us-east-2.amazonaws.com",
+      },
     ],
   },
 };
