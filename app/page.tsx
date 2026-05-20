@@ -2,9 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, ShieldCheck, Truck, CreditCard, Headphones, Zap, Monitor, Smartphone, Volume2, Gamepad2, Laptop, Package } from "lucide-react";
-import { getFeaturedProducts } from "@/features/products/data/mock-products";
+import { catalogService } from "@/features/products/services/catalog-service";
 import { ProductCard } from "@/features/ui/molecules/ProductCard";
 import { HeroCTA } from "@/features/ui/organisms/HeroCTA";
+import { ProductCatalogoResponse } from "@/lib/types";
 
 const CATEGORIES = [
   { id: "laptops", name: "Laptops", icon: Laptop, color: "bg-blue-50 text-blue-600", href: "/products?category=laptops" },
@@ -49,7 +50,13 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  const featuredProducts = await getFeaturedProducts();
+  let featuredProducts: ProductCatalogoResponse[] = [];
+  try {
+    const response = await catalogService.getProducts(0, 8);
+    featuredProducts = response.content;
+  } catch (error) {
+    console.error("Failed to load featured products", error);
+  }
 
   return (
     <div className="overflow-x-hidden">
@@ -213,7 +220,7 @@ export default async function HomePage() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 lg:gap-6">
-            {featuredProducts.slice(0, 8).map((product) => (
+            {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
