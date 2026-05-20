@@ -1,9 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import {
-  getProductById,
-  getRelatedProducts,
-} from "@/features/products/data/mock-products";
+import { catalogService } from "@/features/products/services/catalog-service";
 import { ProductCard } from "@/features/ui/molecules/ProductCard";
 import { RatingStars } from "@/features/ui/molecules/RatingStars";
 import { Badge } from "@/features/ui/atoms/Badge";
@@ -18,31 +15,44 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
+import { IProductDetails } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tipo?: string }>;
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(id);
-  if (!product) return { title: "Producto no encontrado" };
-  return {
-    title: product.name,
-    description: product.description,
-  };
+  const { tipo } = await searchParams;
+  try {
+    const product = await catalogService.getProductById(id, tipo || "VENTA");
+    return {
+      title: product.nombre,
+      description: product.descripcion,
+    };
+  } catch (error) {
+    return { title: "Producto no encontrado" };
+  }
 }
 
-export default async function ProductDetailPage({ params }: PageProps) {
+export default async function ProductDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
-  const product = await getProductById(id);
-  if (!product) notFound();
+  const { tipo } = await searchParams;
+  
+  let product: IProductDetails;
+  let related = [];
 
-  const related = await getRelatedProducts(product.id, product.category.id);
-  const discount =
-    product.originalPrice && product.originalPrice > product.price
-      ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-      : null;
+  try {
+    product = await catalogService.getProductById(id, tipo || "VENTA");
+    const relatedPage = await catalogService.getProducts(0, 4, product.tipo);
+    related = relatedPage.content.filter(p => p.id !== product.id);
+  } catch (error) {
+    return notFound();
+  }
+
+  // Generate a random stock or use a static one for now since the backend might not provide it yet in IProductDetails
+  const stock = 10;
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,15 +68,8 @@ export default async function ProductDetailPage({ params }: PageProps) {
               Productos
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
-            <Link
-              href={`/products?category=${product.category.id}`}
-              className="hover:text-foreground transition-colors"
-            >
-              {product.category.name}
-            </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
             <span className="text-foreground font-medium line-clamp-1 max-w-48">
-              {product.name}
+              {product.nombre}
             </span>
           </nav>
         </div>
@@ -76,67 +79,55 @@ export default async function ProductDetailPage({ params }: PageProps) {
         {/* Main product section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-16">
           {/* Gallery (client) */}
-          <ProductGallery images={product.images} name={product.name} />
+          <ProductGallery images={product.urlsImagenes?.length ? product.urlsImagenes : ["/placeholder.jpg"]} name={product.nombre} />
 
           {/* Product info (server) */}
           <div className="flex flex-col gap-5">
             {/* Badges */}
             <div className="flex flex-wrap gap-2">
-              <Badge variant="muted">{product.category.name}</Badge>
-              {product.isNew && <Badge variant="new">Nuevo</Badge>}
-              {product.isBestSeller && <Badge variant="bestseller">Best Seller</Badge>}
-              {discount && <Badge variant="sale">-{discount}% OFF</Badge>}
+              <Badge variant="muted">{product.categoria}</Badge>
+              <Badge variant="new">{product.tipo}</Badge>
             </div>
 
             {/* Brand + Name */}
             <div>
               <p className="text-secondary font-semibold text-sm uppercase tracking-wider mb-1">
-                {product.brand}
+                DETODOTEC
               </p>
               <h1 className="font-display font-extrabold text-2xl lg:text-3xl xl:text-4xl text-foreground leading-tight">
-                {product.name}
+                {product.nombre}
               </h1>
             </div>
 
             {/* Rating */}
             <RatingStars
-              rating={product.rating}
-              reviewCount={product.reviewCount}
+              rating={4.5}
+              reviewCount={12}
               size="md"
             />
 
             {/* Price */}
             <div className="flex items-end gap-3">
               <span className="font-display font-extrabold text-3xl lg:text-4xl text-foreground">
-                {formatPrice(product.price)}
+                {formatPrice(product.precio)}
               </span>
-              {product.originalPrice && product.originalPrice > product.price && (
-                <>
-                  <span className="text-xl text-muted-foreground line-through mb-1">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                  <Badge variant="sale" size="lg" className="mb-1">
-                    Ahorra {formatPrice(product.originalPrice - product.price)}
-                  </Badge>
-                </>
-              )}
             </div>
 
             {/* Description */}
-            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
+            <p className="text-muted-foreground leading-relaxed">{product.descripcion}</p>
 
             {/* Stock */}
             <div className="flex items-center gap-2">
-              {product.stock > 10 ? (
+              {stock > 10 ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-success" />
                   <span className="text-sm text-success font-medium">En stock</span>
                 </>
-              ) : product.stock > 0 ? (
+              ) : stock > 0 ? (
                 <>
                   <CheckCircle2 className="h-4 w-4 text-warning" />
                   <span className="text-sm text-warning font-medium">
-                    ¡Solo {product.stock} disponibles!
+                    ¡Solo {stock} disponibles!
                   </span>
                 </>
               ) : (
@@ -167,30 +158,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           </div>
         </div>
-
-        {/* Specs */}
-        {product.specs && (
-          <div className="mb-16">
-            <h2 className="font-display font-bold text-2xl text-foreground mb-6">
-              Especificaciones técnicas
-            </h2>
-            <div className="bg-card border border-border rounded-2xl overflow-hidden">
-              {Object.entries(product.specs).map(([key, value], i) => (
-                <div
-                  key={key}
-                  className={`flex items-start gap-4 px-6 py-4 ${
-                    i % 2 === 0 ? "bg-muted/30" : "bg-card"
-                  }`}
-                >
-                  <span className="font-semibold text-sm text-foreground min-w-40 shrink-0">
-                    {key.replace(/_/g, " ")}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Related products */}
         {related.length > 0 && (
