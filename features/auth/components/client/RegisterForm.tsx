@@ -3,21 +3,24 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, User, UserPlus, Loader2 } from "lucide-react";
+import { Mail, Lock, User, UserPlus, Loader2, Phone, MapPin, AtSign } from "lucide-react";
 import Link from "next/link";
-import { useAuthStore } from "../../store/authStore";
+import { authService } from "../../services/auth-service";
 import { Button } from "@/features/ui/atoms/Button";
 import { Input } from "@/features/ui/atoms/Input";
 import { showToast } from "@/features/ui/atoms/Toaster";
 
 export function RegisterForm() {
   const router = useRouter();
-  const register = useAuthStore((state) => state.register);
   
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    surname: "",
+    username: "",
     email: "",
+    phone: "",
+    address: "",
     password: "",
     confirmPassword: "",
   });
@@ -34,20 +37,35 @@ export function RegisterForm() {
 
     setIsLoading(true);
     
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Fake registration
-    register(formData.name, formData.email);
-    
-    showToast({
-      title: "¡Cuenta creada!",
-      description: "Bienvenido a DeTodoTec.",
-      type: "success",
-    });
-    
-    setIsLoading(false);
-    router.push("/");
+    try {
+      // Real registration request
+      await authService.register({
+        email: formData.email,
+        username: formData.username,
+        password: formData.password,
+        name: formData.name,
+        surname: formData.surname,
+        phone: formData.phone,
+        address: formData.address,
+        roles: ["019deacd-8edd-7476-947f-0aa33fa587b5"] // Default "USER" role
+      });
+      
+      showToast({
+        title: "¡Cuenta creada!",
+        description: "Bienvenido a DeTodoTec. Ahora puedes iniciar sesión.",
+        type: "success",
+      });
+      
+      router.push("/login"); // Redirect to login page
+    } catch (error: any) {
+      showToast({
+        title: "Error de registro",
+        description: error.message || "No se pudo crear la cuenta. Intenta nuevamente.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,14 +84,35 @@ export function RegisterForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Input
+            label="Nombre"
+            type="text"
+            placeholder="Juan"
+            required
+            leftIcon={<User className="h-4 w-4" />}
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          />
+          <Input
+            label="Apellido"
+            type="text"
+            placeholder="Pérez"
+            required
+            leftIcon={<User className="h-4 w-4" />}
+            value={formData.surname}
+            onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
+          />
+        </div>
+
         <Input
-          label="Nombre completo"
+          label="Nombre de usuario"
           type="text"
-          placeholder="Juan Pérez"
+          placeholder="juanperez"
           required
-          leftIcon={<User className="h-4 w-4" />}
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          leftIcon={<AtSign className="h-4 w-4" />}
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
         />
 
         <Input
@@ -84,6 +123,26 @@ export function RegisterForm() {
           leftIcon={<Mail className="h-4 w-4" />}
           value={formData.email}
           onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        />
+
+        <Input
+          label="Teléfono"
+          type="tel"
+          placeholder="+51987654321"
+          required
+          leftIcon={<Phone className="h-4 w-4" />}
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        />
+
+        <Input
+          label="Dirección"
+          type="text"
+          placeholder="Av. Javier Prado 123"
+          required
+          leftIcon={<MapPin className="h-4 w-4" />}
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
         />
         
         <Input
