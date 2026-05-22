@@ -3,42 +3,60 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Mail, Lock, ArrowRight, Loader2, User } from "lucide-react";
 import Link from "next/link";
 import { useAuthStore } from "../../store/authStore";
+import { authService } from "../../services/auth-service";
 import { Button } from "@/features/ui/atoms/Button";
 import { Input } from "@/features/ui/atoms/Input";
 import { showToast } from "@/features/ui/atoms/Toaster";
 
 export function LoginForm() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
-  
+  const setAuth = useAuthStore((state) => state.setAuth);
+
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate network delay
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    
-    // Fake login
-    const name = formData.email.split("@")[0]; // Simple fake name
-    login(formData.email, name.charAt(0).toUpperCase() + name.slice(1));
-    
-    showToast({
-      title: "¡Bienvenido de vuelta!",
-      description: "Has iniciado sesión exitosamente.",
-      type: "success",
-    });
-    
-    setIsLoading(false);
-    router.push("/");
+
+    try {
+      // Real login request to the gateway/auth service
+      const tokens = await authService.login({
+        username: formData.username,
+        password: formData.password,
+      });
+
+      // Temporarily save tokens so getCurrentUser can use them immediately
+      useAuthStore.getState().updateTokens(tokens.accessToken, tokens.refreshToken);
+
+      // Fetch full user profile
+      const user = await authService.getCurrentUser();
+
+      // Update global auth state with tokens and user
+      setAuth(user, tokens.accessToken, tokens.refreshToken);
+
+      showToast({
+        title: "¡Bienvenido de vuelta!",
+        description: "Has iniciado sesión exitosamente.",
+        type: "success",
+      });
+
+      router.push("/");
+    } catch (error: any) {
+      showToast({
+        title: "Error al iniciar sesión",
+        description: error.message || "Credenciales inválidas o error de conexión.",
+        type: "error",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,15 +76,15 @@ export function LoginForm() {
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
-          label="Correo electrónico"
-          type="email"
-          placeholder="tu@email.com"
+          label="Usuario"
+          type="text"
+          placeholder="usuario"
           required
-          leftIcon={<Mail className="h-4 w-4" />}
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          leftIcon={<User className="h-4 w-4" />}
+          value={formData.username}
+          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
         />
-        
+
         <div className="space-y-1">
           <Input
             label="Contraseña"
@@ -78,8 +96,8 @@ export function LoginForm() {
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
           />
           <div className="flex justify-end">
-            <Link 
-              href="#" 
+            <Link
+              href="#"
               className="text-xs text-secondary hover:underline font-medium"
             >
               ¿Olvidaste tu contraseña?
@@ -101,8 +119,8 @@ export function LoginForm() {
 
       <div className="mt-8 text-center text-sm text-muted-foreground">
         ¿No tienes una cuenta?{" "}
-        <Link 
-          href="/register" 
+        <Link
+          href="/register"
           className="text-secondary font-semibold hover:underline"
         >
           Regístrate aquí
