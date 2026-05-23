@@ -72,11 +72,11 @@ export function CartView() {
                 className="flex gap-4 p-4 bg-card border border-border rounded-2xl shadow-card"
               >
                 {/* Image */}
-                <Link href={`/products/${item.product.id}`} className="shrink-0">
+                <Link href={`/products/${item.product.id}?tipo=${item.product.tipo}`} className="shrink-0">
                   <div className="relative h-24 w-24 rounded-xl overflow-hidden bg-gray-50">
                     <Image
-                      src={item.product.images[0]}
-                      alt={item.product.name}
+                      src={item.product.imagenUrl || "/placeholder.jpg"}
+                      alt={item.product.nombre}
                       fill
                       className="object-cover"
                       sizes="96px"
@@ -87,21 +87,16 @@ export function CartView() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-0.5">
-                    {item.product.brand}
+                    {item.product.tipo}
                   </p>
-                  <Link href={`/products/${item.product.id}`}>
+                  <Link href={`/products/${item.product.id}?tipo=${item.product.tipo}`}>
                     <h3 className="font-semibold text-sm text-foreground line-clamp-2 hover:text-secondary transition-colors">
-                      {item.product.name}
+                      {item.product.nombre}
                     </h3>
                   </Link>
                   <p className="font-bold text-lg text-foreground mt-1">
-                    {formatPrice(item.product.price)}
+                    {formatPrice(item.product.precio)}
                   </p>
-                  {item.product.originalPrice && item.product.originalPrice > item.product.price && (
-                    <p className="text-xs text-muted-foreground line-through">
-                      {formatPrice(item.product.originalPrice)}
-                    </p>
-                  )}
                 </div>
 
                 {/* Quantity + delete */}
@@ -116,7 +111,7 @@ export function CartView() {
 
                   {/* Subtotal */}
                   <p className="text-sm font-bold text-foreground">
-                    {formatPrice(item.product.price * item.quantity)}
+                    {formatPrice(item.product.precio * item.quantity)}
                   </p>
 
                   {/* Quantity control */}
