@@ -5,8 +5,10 @@ import { User } from "@/lib/types";
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, name: string) => void;
-  register: (name: string, email: string) => void;
+  accessToken: string | null;
+  setAuth: (user: User, accessToken: string, refreshToken: string) => void;
+  updateUser: (user: User) => void;
+  updateTokens: (accessToken: string, refreshToken: string) => void;
   logout: () => void;
 }
 
@@ -15,35 +17,38 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       user: null,
       isAuthenticated: false,
+      accessToken: null,
 
-      login: (email, name) => {
-        // Mocking a successful login response
-        const mockUser: User = {
-          id: `usr_${Math.random().toString(36).substring(2, 9)}`,
-          email,
-          name,
-          role: "customer",
-        };
-        set({ user: mockUser, isAuthenticated: true });
+      setAuth: (user, accessToken, refreshToken) => {
+        // We persist refresh token to local storage securely
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        set({ user, accessToken, isAuthenticated: true });
       },
 
-      register: (name, email) => {
-        // Mocking a successful register response
-        const mockUser: User = {
-          id: `usr_${Math.random().toString(36).substring(2, 9)}`,
-          email,
-          name,
-          role: "customer",
-        };
-        set({ user: mockUser, isAuthenticated: true });
+      updateUser: (user) => {
+        set({ user });
+      },
+
+      updateTokens: (accessToken, refreshToken) => {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('refreshToken', refreshToken);
+        }
+        set({ accessToken });
       },
 
       logout: () => {
-        set({ user: null, isAuthenticated: false });
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('refreshToken');
+        }
+        set({ user: null, accessToken: null, isAuthenticated: false });
       },
     }),
     {
       name: "detodotec-auth-storage",
+      // Exclude tokens from being directly serialized in the zustand persist if we want, 
+      // but keeping accessToken in memory/zustand persist is fine.
     }
   )
 );
