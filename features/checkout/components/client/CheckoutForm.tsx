@@ -490,8 +490,8 @@ export function CheckoutForm() {
                 <div key={item.product.id} className="flex items-center gap-3">
                   <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-muted shrink-0">
                     <Image
-                      src={item.product.images[0]}
-                      alt={item.product.name}
+                      src={item.product.imagenUrl || "/placeholder.jpg"}
+                      alt={item.product.nombre}
                       fill
                       className="object-cover"
                       sizes="48px"
@@ -502,11 +502,11 @@ export function CheckoutForm() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground line-clamp-1">
-                      {item.product.name}
+                      {item.product.nombre}
                     </p>
                   </div>
                   <p className="text-xs font-bold text-foreground shrink-0">
-                    {formatPrice(item.product.price * item.quantity)}
+                    {formatPrice(item.product.precio * item.quantity)}
                   </p>
                 </div>
               ))}
