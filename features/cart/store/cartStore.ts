@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CartState, Product } from "@/lib/types";
+import { CartState, ProductCatalogoResponse, IProductDetails } from "@/lib/types";
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -10,20 +10,30 @@ export const useCartStore = create<CartState>()(
       items: [],
       isOpen: false,
 
-      addItem: (product: Product, quantity = 1) => {
+      addItem: (product: ProductCatalogoResponse | IProductDetails, quantity = 1) => {
         const { items } = get();
         const existing = items.find((i) => i.product.id === product.id);
+
+        // Normalize to ProductCatalogoResponse
+        const normalizedProduct: ProductCatalogoResponse = {
+          id: product.id,
+          nombre: product.nombre,
+          precio: product.precio,
+          tipo: product.tipo,
+          stock: 'stock' in product ? product.stock : 99, // default stock if from details
+          imagenUrl: 'urlsImagenes' in product ? product.urlsImagenes[0] : (product as any).imagenUrl
+        };
 
         if (existing) {
           set({
             items: items.map((i) =>
               i.product.id === product.id
-                ? { ...i, quantity: Math.min(i.quantity + quantity, product.stock) }
+                ? { ...i, quantity: Math.min(i.quantity + quantity, normalizedProduct.stock) }
                 : i
             ),
           });
         } else {
-          set({ items: [...items, { product, quantity }] });
+          set({ items: [...items, { product: normalizedProduct, quantity }] });
         }
       },
 
@@ -51,7 +61,7 @@ export const useCartStore = create<CartState>()(
 
       getTotalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
       getTotalPrice: () =>
-        get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
+        get().items.reduce((sum, i) => sum + i.product.precio * i.quantity, 0),
     }),
     {
       name: "detodotec-cart",
