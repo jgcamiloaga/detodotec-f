@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Check } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/features/cart/store/cartStore";
-import { Product } from "@/lib/types";
+import { ProductCatalogoResponse, IProductDetails } from "@/lib/types";
 import { Button } from "@/features/ui/atoms/Button";
 import { showToast } from "@/features/ui/atoms/Toaster";
 import { cn } from "@/lib/utils";
 
 interface AddToCartButtonProps {
-  product: Product;
+  product: ProductCatalogoResponse | IProductDetails;
   quantity?: number;
   iconOnly?: boolean;
   className?: string;
@@ -23,24 +23,27 @@ export function AddToCartButton({
   className,
 }: AddToCartButtonProps) {
   const [added, setAdded] = useState(false);
-  const { addItem, openCart } = useCartStore();
+  const { addItem } = useCartStore();
 
   const handleAdd = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    if (product.stock === 0) return;
+    const stock = 'stock' in product ? product.stock : 99; // Assume in stock if details
+    if (stock === 0) return;
 
     addItem(product, quantity);
     setAdded(true);
     showToast({
       type: "success",
       title: "¡Agregado al carrito!",
-      description: product.name,
+      description: product.nombre,
     });
 
     setTimeout(() => setAdded(false), 2000);
   };
+
+  const stock = 'stock' in product ? product.stock : 99;
 
   if (iconOnly) {
     return (
@@ -48,14 +51,14 @@ export function AddToCartButton({
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.95 }}
         onClick={handleAdd}
-        disabled={product.stock === 0 || added}
-        aria-label={`Agregar ${product.name} al carrito`}
+        disabled={stock === 0 || added}
+        aria-label={`Agregar ${product.nombre} al carrito`}
         className={cn(
           "flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300 font-semibold shadow-sm",
           added
             ? "bg-success text-white"
             : "bg-accent text-white hover:bg-accent-600 hover:shadow-glow-accent",
-          product.stock === 0 && "bg-muted text-muted-foreground cursor-not-allowed",
+          stock === 0 && "bg-muted text-muted-foreground cursor-not-allowed",
           className
         )}
       >
@@ -80,7 +83,7 @@ export function AddToCartButton({
       variant="accent"
       size="lg"
       onClick={handleAdd}
-      disabled={product.stock === 0 || added}
+      disabled={stock === 0 || added}
       className={cn("w-full gap-2", className)}
       leftIcon={
         added ? (
@@ -90,7 +93,7 @@ export function AddToCartButton({
         )
       }
     >
-      {product.stock === 0
+      {stock === 0
         ? "Sin stock"
         : added
         ? "¡Agregado!"
