@@ -3,21 +3,23 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingCart, Heart } from "lucide-react";
-import { Product } from "@/lib/types";
+import { ProductCatalogoResponse, IProductDetails } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { Button } from "@/features/ui/atoms/Button";
 
 interface ProductActionsProps {
-  product: Product;
+  product: ProductCatalogoResponse | IProductDetails;
 }
 
 export function ProductActions({ product }: ProductActionsProps) {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
 
+  const stock = 'stock' in product ? product.stock : 99;
+
   const decrease = () => setQuantity((q) => Math.max(1, q - 1));
   const increase = () =>
-    setQuantity((q) => Math.min(product.stock, q + 1));
+    setQuantity((q) => Math.min(stock, q + 1));
 
   return (
     <div className="flex flex-col gap-4">
@@ -43,7 +45,7 @@ export function ProductActions({ product }: ProductActionsProps) {
           </motion.span>
           <button
             onClick={increase}
-            disabled={quantity >= product.stock}
+            disabled={quantity >= stock}
             className="flex items-center justify-center h-10 w-10 text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             aria-label="Aumentar cantidad"
           >
