@@ -44,3 +44,12 @@ export function getStarArray(rating: number): ("full" | "half" | "empty")[] {
   }
   return stars;
 }
+
+export function getSafeImageUrl(url: string | undefined | null): string {
+  if (!url) return "/placeholder.jpg";
+  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("/")) {
+    return url;
+  }
+  // Si es un path relativo que no empieza con /, asumimos que es del bucket S3
+  return `https://amzn-dtt-s3-rob.s3.us-east-2.amazonaws.com/${url}`;
+}
