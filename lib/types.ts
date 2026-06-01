@@ -6,44 +6,85 @@ export interface User {
   role: "customer" | "admin";
 }
 
-export interface Product {
+// Catálogo: Lista de productos
+export interface ProductCatalogoResponse {
   id: string;
-  name: string;
-  slug: string;
-  description: string;
-  price: number;
-  originalPrice?: number;
-  discount?: number;
-  images: string[];
-  category: Category;
-  brand: string;
-  rating: number;
-  reviewCount: number;
+  nombre: string;
+  tipo: "VENTA" | "ALQUILER" | "BOX";
+  precio: number;
   stock: number;
-  tags: string[];
-  specs?: Record<string, string>;
-  isFeatured?: boolean;
-  isNew?: boolean;
-  isBestSeller?: boolean;
+  imagenUrl: string;
 }
 
-export interface Category {
+// Catálogo: Detalles de producto
+export interface IProductDetails {
   id: string;
-  name: string;
+  nombre: string;
+  descripcion: string;
+  tipo: "VENTA" | "ALQUILER" | "BOX";
+  precio: number;
+  stock: number;
+  categoria: string;
+  urlsImagenes: string[];
+}
+
+export interface CategoryResponse {
+  id: string;
+  nombre: string;
   slug: string;
-  icon?: string;
-  productCount?: number;
+  parent: string | null;
+  isEnabled: boolean;
+}
+
+export interface PictureUrlResponse {
+  url: string;
+  orden: number;
+}
+
+export interface BaseProductResponse {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  tipo: string;
+  activo: boolean;
+  categoryId: string;
+  categoryNombre: string;
+  pictureUrl: PictureUrlResponse[];
+  createdAt: string;
+}
+
+export interface PageProductCatalogoResponse {
+  content: ProductCatalogoResponse[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+  empty: boolean;
+}
+
+export interface ProductVentaRequest {
+  precio: number;
+  stock: number;
+  productId: string;
+}
+
+export interface ProductAlquilerRequest {
+  precioMes: number;
+  stock: number;
+  productId: string;
 }
 
 export interface CartItem {
-  product: Product;
+  product: ProductCatalogoResponse;
   quantity: number;
 }
 
 export interface CartState {
   items: CartItem[];
   isOpen: boolean;
-  addItem: (product: Product, quantity?: number) => void;
+  addItem: (product: ProductCatalogoResponse | IProductDetails, quantity?: number) => void;
   removeItem: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
