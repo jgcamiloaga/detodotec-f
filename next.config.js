@@ -1,4 +1,12 @@
 /** @type {import('next').NextConfig} */
+const assetsBaseUrl = process.env.NEXT_PUBLIC_ASSETS_BASE_URL;
+
+if (!assetsBaseUrl) {
+  throw new Error("Missing NEXT_PUBLIC_ASSETS_BASE_URL environment variable");
+}
+
+const assetHostname = new URL(assetsBaseUrl).hostname;
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -8,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "amzn-dtt-s3-rob.s3.us-east-2.amazonaws.com",
+        hostname: assetHostname,
       },
     ],
   },
