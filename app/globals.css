@@ -48,7 +48,6 @@
 }
 
 @layer components {
-  /* Shimmer skeleton animation */
   .skeleton {
     @apply bg-muted animate-pulse rounded-md;
     background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
@@ -56,7 +55,6 @@
     animation: shimmer 1.8s infinite;
   }
 
-  /* Glassmorphism card */
   .glass-card {
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(12px);
@@ -64,7 +62,6 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
   }
 
-  /* Gradient text */
   .gradient-text {
     background: linear-gradient(135deg, #1E3A8A 0%, #3B82F6 100%);
     -webkit-background-clip: text;
@@ -79,7 +76,6 @@
     background-clip: text;
   }
 
-  /* Product card hover effect */
   .product-card {
     @apply transition-all duration-300;
   }
@@ -88,12 +84,10 @@
     @apply shadow-card-hover -translate-y-1;
   }
 
-  /* CTA button glow */
   .btn-accent-glow:hover {
     box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
   }
 
-  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
