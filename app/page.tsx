@@ -5,7 +5,7 @@ import { ArrowRight, ShieldCheck, Truck, CreditCard, Headphones, Zap, Monitor, S
 import { catalogService } from "@/features/products/services/catalog-service";
 import { ProductCard } from "@/features/ui/molecules/ProductCard";
 import { HeroCTA } from "@/features/ui/organisms/HeroCTA";
-import { ProductCatalogoResponse } from "@/lib/types";
+import { ProductCatalogResponse } from "@/lib/types";
 
 const CATEGORIES = [
   { id: "laptops", name: "Laptops", icon: Laptop, color: "bg-blue-50 text-blue-600", href: "/products?category=laptops" },
@@ -50,7 +50,7 @@ export const metadata = {
 };
 
 export default async function HomePage() {
-  let featuredProducts: ProductCatalogoResponse[] = [];
+  let featuredProducts: ProductCatalogResponse[] = [];
   try {
     const response = await catalogService.getProducts(0, 8);
     featuredProducts = response.content;
@@ -60,16 +60,13 @@ export default async function HomePage() {
 
   return (
     <div className="overflow-x-hidden">
-      {/* ─── HERO ─── */}
       <section className="relative min-h-[92vh] flex items-center bg-gradient-hero overflow-hidden">
-        {/* Animated background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute -top-40 -right-40 h-[600px] w-[600px] rounded-full bg-secondary/20 blur-[100px]" />
           <div className="absolute -bottom-40 -left-40 h-[500px] w-[500px] rounded-full bg-accent/10 blur-[100px]" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-[400px] w-[400px] rounded-full bg-primary/30 blur-[80px]" />
         </div>
 
-        {/* Grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.03]"
           style={{
@@ -81,7 +78,6 @@ export default async function HomePage() {
 
         <div className="container mx-auto px-4 py-20 relative z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-            {/* Left: text */}
             <div className="text-center lg:text-left">
               <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 rounded-full px-4 py-2 text-sm font-medium mb-6">
                 <Zap className="h-4 w-4 text-accent" />
@@ -100,7 +96,6 @@ export default async function HomePage() {
 
               <HeroCTA />
 
-              {/* Stats */}
               <div className="flex items-center justify-center lg:justify-start gap-8 mt-10">
                 {[
                   { value: "20K+", label: "Clientes felices" },
@@ -117,10 +112,8 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Right: floating product cards preview */}
             <div className="hidden lg:flex items-center justify-center">
               <div className="relative h-[480px] w-[420px]">
-                {/* Main card */}
                 <div className="absolute top-0 right-0 w-72 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-4 shadow-2xl">
                   <div className="relative aspect-square rounded-xl overflow-hidden mb-3 bg-white/5">
                     <Image
@@ -135,7 +128,6 @@ export default async function HomePage() {
                   <p className="text-accent font-bold text-lg mt-1">$18.500.000</p>
                 </div>
 
-                {/* Secondary floating cards */}
                 <div className="absolute bottom-16 left-0 w-56 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl p-3 shadow-xl">
                   <div className="flex items-center gap-3">
                     <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-white/5 shrink-0">
@@ -153,13 +145,11 @@ export default async function HomePage() {
                   </div>
                 </div>
 
-                {/* Badge card */}
                 <div className="absolute bottom-0 right-4 bg-success text-white rounded-xl px-4 py-2.5 shadow-xl">
                   <p className="text-xs font-medium">Envío gratis</p>
                   <p className="text-sm font-bold">en todo el Perú</p>
                 </div>
 
-                {/* Floating badge top left */}
                 <div className="absolute top-4 left-4 bg-accent text-white rounded-lg px-3 py-1.5 text-xs font-bold shadow-md">
                   Hasta 30% OFF
                 </div>
@@ -168,7 +158,6 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Wave divider */}
         <div className="absolute bottom-0 left-0 w-full overflow-hidden">
           <svg viewBox="0 0 1440 80" xmlns="http://www.w3.org/2000/svg" className="w-full fill-background">
             <path d="M0,40 C360,80 720,0 1080,40 C1260,60 1380,30 1440,40 L1440,80 L0,80 Z" />
@@ -176,7 +165,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── BENEFITS BAR ─── */}
       <section className="bg-background border-b border-border">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -198,7 +186,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── FEATURED PRODUCTS ─── */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="flex items-end justify-between mb-10">
@@ -235,11 +222,9 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ─── PROMO BANNER ─── */}
       <section className="py-16 bg-background">
         <div className="container mx-auto px-4">
           <div className="relative rounded-3xl overflow-hidden bg-gradient-hero p-8 md:p-12 lg:p-16">
-            {/* Decorative blobs */}
             <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-accent/10 blur-[60px]" />
             <div className="absolute bottom-0 left-0 h-48 w-48 rounded-full bg-secondary/20 blur-[60px]" />
 
