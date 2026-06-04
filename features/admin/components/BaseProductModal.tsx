@@ -16,11 +16,10 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [tipo, setTipo] = useState("VENTA");
-  const [activo, setActivo] = useState(true);
-  const [categoryId, setCategoryId] = useState("");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState("ENABLED");
+  const [categorySlug, setCategorySlug] = useState("");
   const [image, setImage] = useState<File | null>(null);
 
   useEffect(() => {
@@ -31,11 +30,10 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
         .catch(console.error);
     } else {
       // Reset form on close
-      setNombre("");
-      setDescripcion("");
-      setTipo("VENTA");
-      setActivo(true);
-      setCategoryId("");
+      setName("");
+      setDescription("");
+      setStatus("ENABLED");
+      setCategorySlug("");
       setImage(null);
       setError(null);
     }
@@ -45,7 +43,7 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!categoryId) {
+    if (!categorySlug) {
       setError("Por favor selecciona una categoría");
       return;
     }
@@ -55,13 +53,12 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
 
     try {
       const formData = new FormData();
-      formData.append("nombre", nombre);
-      formData.append("descripcion", descripcion);
-      formData.append("tipo", tipo);
-      formData.append("activo", activo.toString());
-      formData.append("categoryId", categoryId);
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("status", status);
+      formData.append("categorySlugs", categorySlug); // Asumiendo uno por ahora
       if (image) {
-        formData.append("imagen", image);
+        formData.append("images", image);
       }
 
       await catalogService.createBaseProduct(formData);
@@ -101,8 +98,8 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
                 <input
                   type="text"
                   required
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                   placeholder="Ej. AMD Ryzen 5 5600X"
                 />
@@ -112,14 +109,14 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
                 <label className="text-sm font-medium text-slate-700">Categoría</label>
                 <select
                   required
-                  value={categoryId}
-                  onChange={(e) => setCategoryId(e.target.value)}
+                  value={categorySlug}
+                  onChange={(e) => setCategorySlug(e.target.value)}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
                 >
                   <option value="" disabled>Selecciona una categoría</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.parent ? `— ${cat.nombre}` : cat.nombre}
+                    <option key={cat.id} value={cat.slug}>
+                      {cat.parentId ? `— ${cat.name}` : cat.name}
                     </option>
                   ))}
                 </select>
@@ -130,8 +127,8 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
               <label className="text-sm font-medium text-slate-700">Descripción</label>
               <textarea
                 required
-                value={descripcion}
-                onChange={(e) => setDescripcion(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none"
                 placeholder="Descripción detallada del producto..."
@@ -139,31 +136,18 @@ export default function BaseProductModal({ isOpen, onClose, onSuccess }: BasePro
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Tipo de Comercialización</label>
-                <select
-                  value={tipo}
-                  onChange={(e) => setTipo(e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                >
-                  <option value="VENTA">Venta</option>
-                  <option value="ALQUILER">Alquiler</option>
-                  <option value="BOX">Caja Sorpresa (Box)</option>
-                </select>
-              </div>
-
               <div className="space-y-1 flex flex-col justify-center">
                 <label className="text-sm font-medium text-slate-700 mb-2">Estado Inicial</label>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input 
                     type="checkbox" 
                     className="sr-only peer" 
-                    checked={activo}
-                    onChange={(e) => setActivo(e.target.checked)}
+                    checked={status === "ENABLED"}
+                    onChange={(e) => setStatus(e.target.checked ? "ENABLED" : "DISABLED")}
                   />
                   <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                   <span className="ml-3 text-sm font-medium text-slate-600">
-                    {activo ? "Activo (Visible)" : "Inactivo (Oculto)"}
+                    {status === "ENABLED" ? "Activo (Visible)" : "Inactivo (Oculto)"}
                   </span>
                 </label>
               </div>
