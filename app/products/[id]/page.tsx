@@ -15,7 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
-import { IProductDetails } from "@/lib/types";
+import { ProductDetailResponse, SkuType } from "@/lib/types";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -26,10 +26,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const { id } = await params;
   const { tipo } = await searchParams;
   try {
-    const product = await catalogService.getProductById(id, tipo || "VENTA");
+    const product = await catalogService.getProductById(id, (tipo as SkuType) || "SALE");
     return {
-      title: product.nombre,
-      description: product.descripcion,
+      title: product.name,
+      description: product.description,
     };
   } catch (error) {
     return { title: "Producto no encontrado" };
@@ -39,24 +39,22 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 export default async function ProductDetailPage({ params, searchParams }: PageProps) {
   const { id } = await params;
   const { tipo } = await searchParams;
-  
-  let product: IProductDetails;
+
+  let product: ProductDetailResponse;
   let related = [];
 
   try {
-    product = await catalogService.getProductById(id, tipo || "VENTA");
-    const relatedPage = await catalogService.getProducts(0, 4, product.tipo);
+    product = await catalogService.getProductById(id, (tipo as any) || "SALE");
+    const relatedPage = await catalogService.getProducts(0, 4, product.skuType);
     related = relatedPage.content.filter(p => p.id !== product.id);
   } catch (error) {
     return notFound();
   }
 
-  // Generate a random stock or use a static one for now since the backend might not provide it yet in IProductDetails
   const stock = 10;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Breadcrumb */}
       <div className="bg-muted/50 border-b border-border">
         <div className="container mx-auto px-4 py-3">
           <nav className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -69,54 +67,40 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
             </Link>
             <ChevronRight className="h-3.5 w-3.5" />
             <span className="text-foreground font-medium line-clamp-1 max-w-48">
-              {product.nombre}
+              {product.name}
             </span>
           </nav>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-8 lg:py-12">
-        {/* Main product section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 mb-16">
-          {/* Gallery (client) */}
-          <ProductGallery images={product.urlsImagenes?.length ? product.urlsImagenes : ["/placeholder.jpg"]} name={product.nombre} />
+          <ProductGallery images={product.images?.map((img: any) => img.url) || ["/placeholder.jpg"]} name={product.name} />
 
-          {/* Product info (server) */}
           <div className="flex flex-col gap-5">
-            {/* Badges */}
-            <div className="flex flex-wrap gap-2">
-              <Badge variant="muted">{product.categoria}</Badge>
-              <Badge variant="new">{product.tipo}</Badge>
-            </div>
-
-            {/* Brand + Name */}
             <div>
               <p className="text-secondary font-semibold text-sm uppercase tracking-wider mb-1">
                 DETODOTEC
               </p>
               <h1 className="font-display font-extrabold text-2xl lg:text-3xl xl:text-4xl text-foreground leading-tight">
-                {product.nombre}
+                {product.name}
               </h1>
             </div>
 
-            {/* Rating */}
             <RatingStars
               rating={4.5}
               reviewCount={12}
               size="md"
             />
 
-            {/* Price */}
             <div className="flex items-end gap-3">
               <span className="font-display font-extrabold text-3xl lg:text-4xl text-foreground">
-                {formatPrice(product.precio)}
+                {formatPrice(product.price)}
               </span>
             </div>
 
-            {/* Description */}
-            <p className="text-muted-foreground leading-relaxed">{product.descripcion}</p>
+            <p className="text-muted-foreground leading-relaxed">{product.description}</p>
 
-            {/* Stock */}
             <div className="flex items-center gap-2">
               {stock > 10 ? (
                 <>
@@ -135,10 +119,8 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
               )}
             </div>
 
-            {/* Add to cart (client) */}
             <ProductActions product={product} />
 
-            {/* Benefits */}
             <div className="grid grid-cols-3 gap-3 pt-2 border-t border-border">
               {[
                 { icon: Truck, text: "Envío express" },
@@ -159,7 +141,6 @@ export default async function ProductDetailPage({ params, searchParams }: PagePr
           </div>
         </div>
 
-        {/* Related products */}
         {related.length > 0 && (
           <div>
             <h2 className="font-display font-bold text-2xl text-foreground mb-6">
