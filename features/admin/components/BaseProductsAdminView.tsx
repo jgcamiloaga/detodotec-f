@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { catalogService } from "@/features/products/services/catalog-service";
-import { BaseProductResponse } from "@/lib/types";
+import { ProductResponse } from "@/lib/types";
 import { Edit, Trash2, Plus, Tag, DollarSign } from "lucide-react";
 import Image from "next/image";
 import BaseProductModal from "./BaseProductModal";
@@ -10,19 +10,21 @@ import ConfigureProductModal from "./ConfigureProductModal";
 import { getSafeImageUrl } from "@/lib/utils";
 
 export default function BaseProductsAdminView() {
-  const [baseProducts, setBaseProducts] = useState<BaseProductResponse[]>([]);
+  const [baseProducts, setBaseProducts] = useState<ProductResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [isBaseModalOpen, setIsBaseModalOpen] = useState(false);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<BaseProductResponse | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<ProductResponse | null>(null);
 
   const fetchBaseProducts = async () => {
     setIsLoading(true);
     try {
       const data = await catalogService.getBaseProducts();
-      setBaseProducts(data);
+      // Adjust if backend returns { data: { content: [...] } } or { data: [...] } or direct
+      const items = Array.isArray(data) ? data : (data.content ? data.content : []);
+      setBaseProducts(items);
     } catch (err) {
       setError("Error al cargar los productos base");
     } finally {
@@ -34,7 +36,7 @@ export default function BaseProductsAdminView() {
     fetchBaseProducts();
   }, []);
 
-  const handleOpenConfig = (product: BaseProductResponse) => {
+  const handleOpenConfig = (product: ProductResponse) => {
     setSelectedProduct(product);
     setIsConfigModalOpen(true);
   };
@@ -97,10 +99,10 @@ export default function BaseProductsAdminView() {
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <div className="relative w-12 h-12 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
-                          {product.pictureUrl && product.pictureUrl.length > 0 ? (
+                          {product.images && product.images.length > 0 ? (
                             <Image
-                              src={getSafeImageUrl(product.pictureUrl[0].url)}
-                              alt={product.nombre}
+                              src={getSafeImageUrl(product.images[0].url)}
+                              alt={product.name}
                               fill
                               className="object-cover"
                             />
@@ -116,19 +118,19 @@ export default function BaseProductsAdminView() {
                       </div>
                     </td>
                     <td className="p-4">
-                      <p className="font-medium text-slate-800">{product.nombre}</p>
-                      <p className="text-xs text-slate-500 line-clamp-1 max-w-[200px]" title={product.descripcion}>
-                        {product.descripcion}
+                      <p className="font-medium text-slate-800">{product.name}</p>
+                      <p className="text-xs text-slate-500 line-clamp-1 max-w-[200px]" title={product.description}>
+                        {product.description}
                       </p>
                     </td>
                     <td className="p-4">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                        {product.categoryNombre}
+                        {product.categories?.length ? product.categories.map(c => c.name).join(', ') : 'Sin categoría'}
                       </span>
                     </td>
-                    <td className="p-4 text-sm text-slate-600">{product.tipo}</td>
+                    <td className="p-4 text-sm text-slate-600">Base</td>
                     <td className="p-4">
-                      {product.activo ? (
+                      {product.status === "ENABLED" ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-50 text-green-700">
                           Activo
                         </span>
@@ -143,13 +145,13 @@ export default function BaseProductsAdminView() {
                         <button 
                           onClick={() => handleOpenConfig(product)}
                           className={`p-2 rounded-md transition-colors ${
-                            product.activo 
+                            product.status === "ENABLED" 
                               ? "text-green-500 hover:text-green-600 hover:bg-green-50" 
                               : "text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50"
                           }`}
-                          title={product.activo ? "Editar Precio y Stock" : "Configurar Precio y Stock"}
+                          title={product.status === "ENABLED" ? "Editar Precio y Stock" : "Configurar Precio y Stock"}
                         >
-                          {product.activo ? <DollarSign size={16} /> : <Tag size={16} />}
+                          {product.status === "ENABLED" ? <DollarSign size={16} /> : <Tag size={16} />}
                         </button>
                         <button className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-md transition-colors" title="Editar">
                           <Edit size={16} />
