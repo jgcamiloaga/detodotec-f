@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { X, DollarSign, Package, Loader2 } from "lucide-react";
 import { catalogService } from "@/features/products/services/catalog-service";
-import { BaseProductResponse } from "@/lib/types";
+import { ProductResponse, SkuType } from "@/lib/types";
 
 interface ConfigureProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  product: BaseProductResponse | null;
+  product: ProductResponse | null;
 }
 
 export default function ConfigureProductModal({ isOpen, onClose, onSuccess, product }: ConfigureProductModalProps) {
@@ -21,6 +21,8 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
   const [stock, setStock] = useState("");
   const [configId, setConfigId] = useState<string | null>(null);
 
+  const [skuType, setSkuType] = useState<SkuType>("SALE");
+
   useEffect(() => {
     if (isOpen && product) {
       setPrecio("");
@@ -28,22 +30,24 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
       setConfigId(null);
       setError(null);
 
-      // If the product is already active, fetch its existing configuration
-      if (product.activo) {
-        setIsFetching(true);
-        catalogService.getProductByBaseId(product.id, product.tipo)
-          .then((data) => {
-            setPrecio(data.precio.toString());
+      // Intenta cargar la configuración de SALE y RENTAL
+      setIsFetching(true);
+      catalogService.getProductById(product.id, skuType)
+        .then((data) => {
+          if (data && data.price !== undefined) {
+            setPrecio(data.price.toString());
             setStock(data.stock.toString());
-            setConfigId(data.id); // The configuration ID (ventaId or alquilerId)
-          })
-          .catch(() => {
-            setError("No se pudo cargar la configuración existente.");
-          })
-          .finally(() => setIsFetching(false));
-      }
+            setConfigId(data.id);
+          } else {
+            setConfigId(null);
+          }
+        })
+        .catch(() => {
+          setConfigId(null); // No configurado aún
+        })
+        .finally(() => setIsFetching(false));
     }
-  }, [isOpen, product]);
+  }, [isOpen, product, skuType]);
 
   if (!isOpen || !product) return null;
 
@@ -56,41 +60,42 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
       const parsedPrecio = parseFloat(precio);
       const parsedStock = parseInt(stock, 10);
 
-      if (product.tipo === "VENTA") {
-        if (product.activo && configId) {
+      if (skuType === "SALE") {
+        if (configId) {
           // Update existing
           await catalogService.updateVenta(configId, {
             productId: product.id,
-            precio: parsedPrecio,
+            price: parsedPrecio,
             stock: parsedStock,
           });
         } else {
           // Create new
           await catalogService.createVenta({
             productId: product.id,
-            precio: parsedPrecio,
+            price: parsedPrecio,
             stock: parsedStock,
           });
         }
-      } else if (product.tipo === "ALQUILER") {
-        if (product.activo && configId) {
+      } else if (skuType === "RENTAL") {
+        if (configId) {
           // Update existing
           await catalogService.updateAlquiler(configId, {
             productId: product.id,
-            precioMes: parsedPrecio,
+            monthlyPrice: parsedPrecio,
+            weeklyPrice: parsedPrecio / 4, // Aproximado por ahora
+            securityDeposit: parsedPrecio * 2,
             stock: parsedStock,
           });
         } else {
           // Create new
           await catalogService.createAlquiler({
             productId: product.id,
-            precioMes: parsedPrecio,
+            monthlyPrice: parsedPrecio,
+            weeklyPrice: parsedPrecio / 4,
+            securityDeposit: parsedPrecio * 2,
             stock: parsedStock,
           });
         }
-      } else {
-        // Handle BOX or other types if implemented
-        throw new Error(`Configuración no soportada para el tipo: ${product.tipo}`);
       }
 
       onSuccess();
@@ -103,7 +108,7 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
   };
 
   const getPriceLabel = () => {
-    return product.tipo === "ALQUILER" ? "Precio por Mes (S/)" : "Precio de Venta (S/)";
+    return skuType === "RENTAL" ? "Precio por Mes (S/)" : "Precio de Venta (S/)";
   };
 
   return (
@@ -112,10 +117,10 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
         <div className="flex justify-between items-center p-6 border-b border-slate-100">
           <div>
             <h2 className="text-xl font-bold text-slate-800">
-              {product.activo ? "Editar Precio y Stock" : "Configurar Producto"}
+              {configId ? "Editar Precio y Stock" : "Configurar Producto"}
             </h2>
             <p className="text-sm text-slate-500">
-              {product.activo ? `Modificar catálogo (${product.tipo})` : `Activar para catálogo (${product.tipo})`}
+              Configuración de inventario y precios
             </p>
           </div>
           <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors">
@@ -130,14 +135,34 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
             </div>
           )}
 
-          <div className="mb-6 flex items-center gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
-            <div className="flex-1">
-              <h3 className="font-semibold text-slate-800">{product.nombre}</h3>
-              <p className="text-xs text-slate-500">ID: {product.id}</p>
+          <div className="mb-6 flex flex-col gap-4 bg-slate-50 p-4 rounded-lg border border-slate-100">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-slate-800">{product.name}</h3>
+                <p className="text-xs text-slate-500">ID: {product.id}</p>
+              </div>
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
-              {product.tipo}
-            </span>
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSkuType("SALE")}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  skuType === "SALE" ? "bg-primary text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                Venta
+              </button>
+              <button
+                type="button"
+                onClick={() => setSkuType("RENTAL")}
+                className={`flex-1 py-2 text-sm font-medium rounded-md transition-colors ${
+                  skuType === "RENTAL" ? "bg-primary text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                }`}
+              >
+                Alquiler
+              </button>
+            </div>
           </div>
 
           {isFetching ? (
@@ -199,11 +224,11 @@ export default function ConfigureProductModal({ isOpen, onClose, onSuccess, prod
           <button 
             type="submit" 
             form="configure-product-form"
-            disabled={isLoading || isFetching || product.tipo === "BOX"}
+            disabled={isLoading || isFetching}
             className="px-5 py-2.5 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {isLoading && <Loader2 className="w-4 h-4 animate-spin" />}
-            {product.activo ? "Actualizar Configuración" : "Guardar Configuración"}
+            {configId ? "Actualizar Configuración" : "Guardar Configuración"}
           </button>
         </div>
       </div>
