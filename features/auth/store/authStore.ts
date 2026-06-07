@@ -47,8 +47,10 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "detodotec-auth-storage",
-      // Exclude tokens from being directly serialized in the zustand persist if we want, 
-      // but keeping accessToken in memory/zustand persist is fine.
+      partialize: (state) => ({
+        user: state.user,
+        isAuthenticated: state.isAuthenticated,
+      }),
     }
   )
 );
