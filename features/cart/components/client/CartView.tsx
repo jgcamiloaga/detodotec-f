@@ -13,7 +13,7 @@ export function CartView() {
     useCartStore();
 
   const total = getTotalPrice();
-  const shipping = total >= 200_000 ? 0 : 15_000;
+  const shipping = total >= 200 ? 0 : 15;
   const subtotal = total;
   const grandTotal = total + shipping;
 
@@ -72,11 +72,11 @@ export function CartView() {
                 className="flex gap-4 p-4 bg-card border border-border rounded-2xl shadow-card"
               >
                 {/* Image */}
-                <Link href={`/products/${item.product.id}?tipo=${item.product.tipo}`} className="shrink-0">
+                <Link href={`/products/${item.product.id}?tipo=${item.product.skuType}`} className="shrink-0">
                   <div className="relative h-24 w-24 rounded-xl overflow-hidden bg-gray-50">
                     <Image
-                      src={item.product.imagenUrl || "/placeholder.jpg"}
-                      alt={item.product.nombre}
+                      src={item.product.url || "/placeholder.jpg"}
+                      alt={item.product.name}
                       fill
                       className="object-cover"
                       sizes="96px"
@@ -87,15 +87,15 @@ export function CartView() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-secondary uppercase tracking-wide mb-0.5">
-                    {item.product.tipo}
+                    {item.product.skuType}
                   </p>
-                  <Link href={`/products/${item.product.id}?tipo=${item.product.tipo}`}>
+                  <Link href={`/products/${item.product.id}?tipo=${item.product.skuType}`}>
                     <h3 className="font-semibold text-sm text-foreground line-clamp-2 hover:text-secondary transition-colors">
-                      {item.product.nombre}
+                      {item.product.name}
                     </h3>
                   </Link>
                   <p className="font-bold text-lg text-foreground mt-1">
-                    {formatPrice(item.product.precio)}
+                    {formatPrice(item.product.price)}
                   </p>
                 </div>
 
@@ -111,7 +111,7 @@ export function CartView() {
 
                   {/* Subtotal */}
                   <p className="text-sm font-bold text-foreground">
-                    {formatPrice(item.product.precio * item.quantity)}
+                    {formatPrice(item.product.price * item.quantity)}
                   </p>
 
                   {/* Quantity control */}
@@ -189,7 +189,7 @@ export function CartView() {
               </div>
               {shipping > 0 && (
                 <p className="text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">
-                  Agrega {formatPrice(200_000 - subtotal)} más para envío gratis 🚚
+                  Agrega {formatPrice(200 - subtotal)} más para envío gratis
                 </p>
               )}
               <div className="border-t border-border pt-3 flex justify-between">
@@ -214,9 +214,9 @@ export function CartView() {
 
             {/* Trust badges */}
             <div className="mt-4 flex items-center justify-center gap-3 text-xs text-muted-foreground">
-              <span>🔒 Pago seguro</span>
+              <span>Pago seguro</span>
               <span>·</span>
-              <span>📦 Envío asegurado</span>
+              <span>Envío asegurado</span>
             </div>
           </div>
         </div>
