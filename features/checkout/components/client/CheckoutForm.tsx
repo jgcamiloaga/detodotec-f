@@ -59,7 +59,7 @@ export function CheckoutForm() {
   });
 
   const total = getTotalPrice();
-  const shipping = total >= 200_000 ? 0 : 15_000;
+  const shipping = total >= 200 ? 0 : 15;
   const grandTotal = total + shipping;
 
   const handleShippingSubmit = (e: React.FormEvent) => {
@@ -92,7 +92,6 @@ export function CheckoutForm() {
     return clean.length > 2 ? `${clean.slice(0, 2)}/${clean.slice(2)}` : clean;
   };
 
-  // ─── SUCCESS STATE ───
   if (isSuccess) {
     return (
       <div className="container mx-auto px-4 py-20 flex flex-col items-center text-center">
@@ -150,7 +149,6 @@ export function CheckoutForm() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Progress steps */}
       <div className="flex items-center justify-center gap-0 mb-10">
         {STEPS.map((s, i) => (
           <div key={s.id} className="flex items-center">
@@ -180,10 +178,8 @@ export function CheckoutForm() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form area */}
         <div className="lg:col-span-2">
           <AnimatePresence mode="wait">
-            {/* ─── STEP 0: SHIPPING ─── */}
             {step === 0 && (
               <motion.form
                 key="shipping"
@@ -276,7 +272,6 @@ export function CheckoutForm() {
               </motion.form>
             )}
 
-            {/* ─── STEP 1: PAYMENT ─── */}
             {step === 1 && (
               <motion.form
                 key="payment"
@@ -293,7 +288,6 @@ export function CheckoutForm() {
                   </h2>
                 </div>
 
-                {/* Payment methods */}
                 <div className="flex gap-3 mb-6">
                   {[
                     { id: "card", label: "💳 Tarjeta" },
@@ -403,7 +397,6 @@ export function CheckoutForm() {
               </motion.form>
             )}
 
-            {/* ─── STEP 2: CONFIRM ─── */}
             {step === 2 && (
               <motion.div
                 key="confirm"
@@ -419,7 +412,6 @@ export function CheckoutForm() {
                   </h2>
                 </div>
 
-                {/* Review shipping */}
                 <div className="bg-muted/50 rounded-xl p-4 mb-4">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-sm text-foreground flex items-center gap-1.5">
@@ -435,7 +427,6 @@ export function CheckoutForm() {
                   <p className="text-sm text-muted-foreground">{shippingData.email}</p>
                 </div>
 
-                {/* Review payment */}
                 <div className="bg-muted/50 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-between mb-2">
                     <p className="font-semibold text-sm text-foreground flex items-center gap-1.5">
@@ -479,7 +470,6 @@ export function CheckoutForm() {
           </AnimatePresence>
         </div>
 
-        {/* Order summary sidebar */}
         <div className="lg:col-span-1">
           <div className="bg-card border border-border rounded-2xl p-5 shadow-card sticky top-24">
             <h3 className="font-display font-bold text-base text-foreground mb-4">
@@ -490,8 +480,8 @@ export function CheckoutForm() {
                 <div key={item.product.id} className="flex items-center gap-3">
                   <div className="relative h-12 w-12 rounded-lg overflow-hidden bg-muted shrink-0">
                     <Image
-                      src={item.product.imagenUrl || "/placeholder.jpg"}
-                      alt={item.product.nombre}
+                      src={item.product.url || "/placeholder.jpg"}
+                      alt={item.product.name}
                       fill
                       className="object-cover"
                       sizes="48px"
@@ -502,11 +492,11 @@ export function CheckoutForm() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground line-clamp-1">
-                      {item.product.nombre}
+                      {item.product.name}
                     </p>
                   </div>
                   <p className="text-xs font-bold text-foreground shrink-0">
-                    {formatPrice(item.product.precio * item.quantity)}
+                    {formatPrice(item.product.price * item.quantity)}
                   </p>
                 </div>
               ))}
@@ -534,7 +524,6 @@ export function CheckoutForm() {
   );
 }
 
-// ─── Helper component ───
 function InputField({
   label,
   className,
