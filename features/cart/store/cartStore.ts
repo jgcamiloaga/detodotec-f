@@ -2,7 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { CartState, ProductCatalogoResponse, IProductDetails } from "@/lib/types";
+import { CartState, ProductCatalogResponse, ProductDetailResponse } from "@/lib/types";
 
 export const useCartStore = create<CartState>()(
   persist(
@@ -10,18 +10,21 @@ export const useCartStore = create<CartState>()(
       items: [],
       isOpen: false,
 
-      addItem: (product: ProductCatalogoResponse | IProductDetails, quantity = 1) => {
+      addItem: (product: ProductCatalogResponse | ProductDetailResponse, quantity = 1) => {
         const { items } = get();
         const existing = items.find((i) => i.product.id === product.id);
 
-        // Normalize to ProductCatalogoResponse
-        const normalizedProduct: ProductCatalogoResponse = {
+        // Normalize to ProductCatalogResponse
+        const normalizedProduct: ProductCatalogResponse = {
           id: product.id,
-          nombre: product.nombre,
-          precio: product.precio,
-          tipo: product.tipo,
-          stock: 'stock' in product ? product.stock : 99, // default stock if from details
-          imagenUrl: 'urlsImagenes' in product ? product.urlsImagenes[0] : (product as any).imagenUrl
+          name: product.name,
+          price: product.price,
+          skuType: product.skuType,
+          stock: product.stock || 99,
+          categorySlugs: 'categorySlugs' in product ? product.categorySlugs : "",
+          url: 'images' in product && product.images?.length
+             ? product.images[0].url
+             : ('url' in product ? product.url : "/placeholder.jpg")
         };
 
         if (existing) {
@@ -61,7 +64,7 @@ export const useCartStore = create<CartState>()(
 
       getTotalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
       getTotalPrice: () =>
-        get().items.reduce((sum, i) => sum + i.product.precio * i.quantity, 0),
+        get().items.reduce((sum, i) => sum + i.product.price * i.quantity, 0),
     }),
     {
       name: "detodotec-cart",
