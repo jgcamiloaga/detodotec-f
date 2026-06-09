@@ -3,12 +3,12 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Minus, Plus, ShoppingCart, Heart } from "lucide-react";
-import { ProductCatalogoResponse, IProductDetails } from "@/lib/types";
+import { ProductCatalogResponse, ProductDetailResponse } from "@/lib/types";
 import { AddToCartButton } from "./AddToCartButton";
 import { Button } from "@/features/ui/atoms/Button";
 
 interface ProductActionsProps {
-  product: ProductCatalogoResponse | IProductDetails;
+  product: ProductCatalogResponse | ProductDetailResponse;
 }
 
 export function ProductActions({ product }: ProductActionsProps) {
