@@ -4,13 +4,13 @@ import { motion } from "framer-motion";
 import { ShoppingCart, Check } from "lucide-react";
 import { useState } from "react";
 import { useCartStore } from "@/features/cart/store/cartStore";
-import { ProductCatalogoResponse, IProductDetails } from "@/lib/types";
+import { ProductCatalogResponse, ProductDetailResponse } from "@/lib/types";
 import { Button } from "@/features/ui/atoms/Button";
 import { showToast } from "@/features/ui/atoms/Toaster";
 import { cn } from "@/lib/utils";
 
 interface AddToCartButtonProps {
-  product: ProductCatalogoResponse | IProductDetails;
+  product: ProductCatalogResponse | ProductDetailResponse;
   quantity?: number;
   iconOnly?: boolean;
   className?: string;
@@ -37,7 +37,7 @@ export function AddToCartButton({
     showToast({
       type: "success",
       title: "¡Agregado al carrito!",
-      description: product.nombre,
+      description: product.name,
     });
 
     setTimeout(() => setAdded(false), 2000);
@@ -52,7 +52,7 @@ export function AddToCartButton({
         whileTap={{ scale: 0.95 }}
         onClick={handleAdd}
         disabled={stock === 0 || added}
-        aria-label={`Agregar ${product.nombre} al carrito`}
+        aria-label={`Agregar ${product.name} al carrito`}
         className={cn(
           "flex items-center justify-center h-10 w-10 rounded-full transition-all duration-300 font-semibold shadow-sm",
           added
