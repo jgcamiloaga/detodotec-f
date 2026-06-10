@@ -1,93 +1,116 @@
 import { catalogApi } from "@/lib/api-client";
-import { ProductCatalogoResponse, IProductDetails, CategoryResponse, PageProductCatalogoResponse, BaseProductResponse } from "@/lib/types";
+import { 
+  ConsumerResponse,
+  PageResponse,
+  ProductCatalogResponse,
+  ProductResponse,
+  CategoryTreeResponse,
+  CategoryResponse,
+  SaleProductRequest,
+  SaleProductResponse,
+  RentalProductRequest,
+  RentalProductResponse,
+  ProductBundleRequest,
+  ProductBundleResponse,
+  SkuType
+} from "@/lib/types";
 
 export const catalogService = {
-  /**
-   * Get all products from the catalog (paginated with optional filters)
-   */
   async getProducts(
     page: number = 0,
     size: number = 20,
-    tipo?: string,
+    skuType?: SkuType,
     categorySlug?: string,
-    sort?: string[]
-  ): Promise<PageProductCatalogoResponse> {
+    minPrice?: number,
+    maxPrice?: number
+  ): Promise<PageResponse<ProductCatalogResponse>> {
     const params: Record<string, any> = { page, size };
-    if (tipo) params.tipo = tipo;
+    if (skuType) params.skuType = skuType;
     if (categorySlug) params.categorySlug = categorySlug;
-    if (sort) params.sort = sort;
+    if (minPrice !== undefined) params.minPrice = minPrice;
+    if (maxPrice !== undefined) params.maxPrice = maxPrice;
 
-    return catalogApi.get<PageProductCatalogoResponse>('/products', { params });
+    const res = await catalogApi.get<ConsumerResponse<any> | PageResponse<ProductCatalogResponse>>('/catalog', { params });
+    const data = (res as ConsumerResponse<any>).data !== undefined ? (res as ConsumerResponse<any>).data : res;
+    
+    if (Array.isArray(data)) {
+      return {
+        content: data,
+        totalElements: data.length,
+        totalPages: 1,
+        number: page,
+        size: size,
+        first: page === 0,
+        last: data.length < size,
+        empty: data.length === 0
+      };
+    }
+    
+    return data as PageResponse<ProductCatalogResponse>;
   },
 
-  /**
-   * Get a single product by Configuration ID and Tipo
-   */
-  async getProductById(id: string, tipo: string): Promise<IProductDetails> {
-    return catalogApi.get<IProductDetails>(`/products/${id}`, {
-      params: { tipo }
+  async getProductById(id: string, type: SkuType): Promise<any> {
+    return catalogApi.get<any>(`/catalog/${id}`, {
+      params: { type }
     });
   },
 
-  /**
-   * Get a single product configuration by its Base Product ID and Tipo
-   */
-  async getProductByBaseId(baseId: string, tipo: string): Promise<IProductDetails> {
-    return catalogApi.get<IProductDetails>(`/products/base/${baseId}`, {
-      params: { tipo }
-    });
+  async getCategoriesTree(parentId: string): Promise<CategoryTreeResponse> {
+    const res = await catalogApi.get<ConsumerResponse<CategoryTreeResponse>>(`/categories/tree/${parentId}`);
+    return res.data;
   },
 
-  /**
-   * Get all categories
-   */
-  async getCategories(): Promise<CategoryResponse[]> {
-    return catalogApi.get<CategoryResponse[]>('/categories');
+  async getCategories(page: number = 0, size: number = 100): Promise<CategoryResponse[]> {
+    const res = await catalogApi.get<ConsumerResponse<CategoryResponse[]>>('/categories', { params: { page: page.toString(), size: size.toString() } });
+    return res.data;
   },
 
-  /**
-   * Get all base products
-   */
-  async getBaseProducts(): Promise<BaseProductResponse[]> {
-    return catalogApi.get<BaseProductResponse[]>('/base-products');
+  async getBaseProducts(page: number = 0, size: number = 20): Promise<any> {
+    const res = await catalogApi.get<ConsumerResponse<any>>('/products', { params: { page: page.toString(), size: size.toString() } });
+    return res.data;
   },
 
-  /**
-   * Create a new base product
-   */
-  async createBaseProduct(formData: FormData): Promise<BaseProductResponse> {
-    return catalogApi.post<BaseProductResponse>('/base-products', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+  async getBaseProductById(id: string): Promise<ProductResponse> {
+    const res = await catalogApi.get<ConsumerResponse<ProductResponse>>(`/products/${id}`);
+    return res.data;
   },
 
-  /**
-   * Configure a base product as VENTA
-   */
-  async createVenta(data: import('@/lib/types').ProductVentaRequest): Promise<IProductDetails> {
-    return catalogApi.post<IProductDetails>('/products/venta', data);
+  async createBaseProduct(formData: FormData): Promise<ProductResponse> {
+    const res = await catalogApi.post<ConsumerResponse<ProductResponse>>('/products', formData);
+    return res.data;
   },
 
-  /**
-   * Configure a base product as ALQUILER
-   */
-  async createAlquiler(data: import('@/lib/types').ProductAlquilerRequest): Promise<IProductDetails> {
-    return catalogApi.post<IProductDetails>('/products/alquiler', data);
+  async createVenta(data: SaleProductRequest): Promise<SaleProductResponse> {
+    const res = await catalogApi.post<ConsumerResponse<SaleProductResponse>>('/admin/sale-products', data);
+    return res.data;
   },
 
-  /**
-   * Update an existing VENTA configuration
-   */
-  async updateVenta(ventaId: string, data: import('@/lib/types').ProductVentaRequest): Promise<IProductDetails> {
-    return catalogApi.put<IProductDetails>(`/products/venta/${ventaId}`, data);
+  async updateVenta(id: string, data: Partial<SaleProductRequest>): Promise<SaleProductResponse> {
+    return catalogApi.post<SaleProductResponse>(`/admin/sale-products/${id}`, data, { method: 'PATCH' });
   },
 
-  /**
-   * Update an existing ALQUILER configuration
-   */
-  async updateAlquiler(alquilerId: string, data: import('@/lib/types').ProductAlquilerRequest): Promise<IProductDetails> {
-    return catalogApi.put<IProductDetails>(`/products/alquiler/${alquilerId}`, data);
+  async createAlquiler(data: RentalProductRequest): Promise<RentalProductResponse> {
+    const res = await catalogApi.post<ConsumerResponse<RentalProductResponse>>('/admin/rental-products', data);
+    return res.data;
+  },
+
+  async updateAlquiler(id: string, data: Partial<RentalProductRequest>): Promise<RentalProductResponse> {
+    return catalogApi.post<RentalProductResponse>(`/admin/rental-products/${id}`, data, { method: 'PATCH' });
+  },
+
+  async replenishSaleStock(id: string, quantity: number): Promise<void> {
+    await catalogApi.post(`/admin/sale-products/${id}/replenish`, null, { params: { quantity: quantity.toString() }, method: 'PATCH' });
+  },
+
+  async withdrawSaleStock(id: string, quantity: number): Promise<void> {
+    await catalogApi.post(`/admin/sale-products/${id}/withdraw`, null, { params: { quantity: quantity.toString() }, method: 'PATCH' });
+  },
+
+  async replenishRentalStock(id: string, quantity: number): Promise<void> {
+    await catalogApi.post(`/admin/rental-products/${id}/replenish`, null, { params: { quantity: quantity.toString() }, method: 'PATCH' });
+  },
+
+  async withdrawRentalStock(id: string, quantity: number): Promise<void> {
+    await catalogApi.post(`/admin/rental-products/${id}/withdraw`, null, { params: { quantity: quantity.toString() }, method: 'PATCH' });
   }
 };
