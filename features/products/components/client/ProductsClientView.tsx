@@ -12,14 +12,13 @@ import {
   Search,
   Loader2
 } from "lucide-react";
-import { PageProductCatalogoResponse, ProductCatalogoResponse, CategoryResponse } from "@/lib/types";
+import { PageResponse, ProductCatalogResponse, CategoryResponse, SkuType } from "@/lib/types";
 import { ProductCard } from "@/features/ui/molecules/ProductCard";
 import { ProductCardSkeleton } from "@/features/ui/atoms/Skeleton";
 import { Button } from "@/features/ui/atoms/Button";
 import { cn } from "@/lib/utils";
 import { catalogService } from "@/features/products/services/catalog-service";
 
-// Simple useDebounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
@@ -32,54 +31,48 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 interface ProductsClientViewProps {
-  initialData: PageProductCatalogoResponse | null;
+  initialData: PageResponse<ProductCatalogResponse> | null;
 }
 
 export function ProductsClientView({ initialData }: ProductsClientViewProps) {
   const searchParams = useSearchParams();
   const [isLoading, setIsLoading] = useState(!initialData);
-  const [data, setData] = useState<PageProductCatalogoResponse | null>(initialData);
+  const [data, setData] = useState<PageResponse<ProductCatalogResponse> | null>(initialData);
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // State variables for filters
-  const [tipo, setTipo] = useState<string>("");
+  const [skuType, setSkuType] = useState<SkuType | "">("");
   const [categorySlug, setCategorySlug] = useState<string>("");
   const [sort, setSort] = useState<string>("nombre,ASC");
   const [page, setPage] = useState(0);
 
-  // Memoize the filters object to avoid infinite loop in useDebounce
   const filters = useMemo(
-    () => ({ page, tipo, categorySlug, sort }),
-    [page, tipo, categorySlug, sort]
+    () => ({ page, skuType, categorySlug, sort }),
+    [page, skuType, categorySlug, sort]
   );
 
-  // Debounce the changing filter values so we don't spam the API
   const debouncedFilters = useDebounce(filters, 300);
 
-  // Load categories
   useEffect(() => {
     catalogService.getCategories().then((res) => {
       setCategories(res);
     }).catch(console.error);
   }, []);
 
-  // Fetch products when debounced filters change
   useEffect(() => {
-    // skip initial fetch if we just mounted and have initial data (page 0, no filters)
-    if (initialData && debouncedFilters.page === 0 && !debouncedFilters.tipo && !debouncedFilters.categorySlug && debouncedFilters.sort === "nombre,ASC") return;
+    if (initialData && debouncedFilters.page === 0 && !debouncedFilters.skuType && !debouncedFilters.categorySlug && debouncedFilters.sort === "nombre,ASC") return;
 
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
         const sortArr = debouncedFilters.sort ? [debouncedFilters.sort] : undefined;
+        // @ts-ignore
         const res = await catalogService.getProducts(
           debouncedFilters.page,
           20,
-          debouncedFilters.tipo || undefined,
-          debouncedFilters.categorySlug || undefined,
-          sortArr
+          debouncedFilters.skuType || undefined,
+          debouncedFilters.categorySlug || undefined
         );
         setData(res);
       } catch (error) {
@@ -93,38 +86,34 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
   }, [debouncedFilters, initialData]);
 
   const clearFilters = () => {
-    setTipo("");
+    setSkuType("");
     setCategorySlug("");
     setSort("nombre,ASC");
     setPage(0);
   };
 
-  const hasActiveFilters = tipo !== "" || categorySlug !== "";
+  const hasActiveFilters = skuType !== "" || categorySlug !== "";
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Top toolbar */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
-        {/* Type / Busqueda placeholder */}
         <div className="relative flex-1 w-full">
-          {/* In this version, we don't have text search in the backend, so we filter by Tipo */}
           <select
-            value={tipo}
+            value={skuType}
             onChange={(e) => {
-              setTipo(e.target.value);
+              setSkuType(e.target.value as SkuType | "");
               setPage(0);
             }}
             className="w-full h-10 pl-3 pr-8 rounded-lg border border-border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-secondary appearance-none cursor-pointer"
           >
             <option value="">Todos los tipos</option>
-            <option value="VENTA">Venta</option>
-            <option value="ALQUILER">Alquiler</option>
-            <option value="BOX">Caja Sorpresa (Box)</option>
+            <option value="SALE">Venta</option>
+            <option value="RENTAL">Alquiler</option>
+            <option value="BUNDLE">Paquete (Bundle)</option>
           </select>
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
 
-        {/* Sort */}
         <div className="relative">
           <select
             value={sort}
@@ -142,7 +131,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         </div>
 
-        {/* Filters toggle */}
         <Button
           variant={filtersOpen ? "default" : "outline"}
           size="md"
@@ -152,7 +140,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
           Categorías
         </Button>
 
-        {/* View mode */}
         <div className="flex items-center rounded-lg border border-border overflow-hidden">
           <button
             onClick={() => setViewMode("grid")}
@@ -181,7 +168,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
         </div>
       </div>
 
-      {/* Filters panel */}
       <AnimatePresence>
         {filtersOpen && (
           <motion.div
@@ -193,12 +179,11 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
           >
             <div className="bg-card border border-border rounded-2xl p-5">
               <div className="flex flex-wrap gap-6">
-                {/* Categories */}
                 <div className="flex-1 min-w-48">
                   <p className="text-sm font-semibold text-foreground mb-3">Categoría</p>
                   <div className="flex flex-col gap-4">
-                    {categories.filter(c => !c.parent).map((parentCat) => {
-                      const children = categories.filter(c => c.parent === parentCat.id);
+                    {categories.filter(c => !c.parentId).map((parentCat) => {
+                      const children = categories.filter(c => c.parentId === parentCat.id);
                       return (
                         <div key={parentCat.id} className="flex flex-col gap-2">
                           <div className="flex flex-wrap gap-2">
@@ -214,7 +199,7 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
                                   : "bg-background text-foreground border-border hover:border-primary hover:text-primary"
                               )}
                             >
-                              {parentCat.nombre}
+                              {parentCat.name}
                             </button>
                           </div>
 
@@ -234,7 +219,7 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
                                       : "bg-background text-foreground border-border hover:border-primary hover:text-primary"
                                   )}
                                 >
-                                  {childCat.nombre}
+                                  {childCat.name}
                                 </button>
                               ))}
                             </div>
@@ -264,7 +249,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
         )}
       </AnimatePresence>
 
-      {/* Results count */}
       <div className="flex items-center justify-between mb-4">
         <p className="text-sm text-muted-foreground">
           <span className="font-semibold text-foreground">{data?.totalElements || 0}</span>{" "}
@@ -272,7 +256,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
         </p>
       </div>
 
-      {/* Products grid */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {[...Array(8)].map((_, i) => (
@@ -323,7 +306,6 @@ export function ProductsClientView({ initialData }: ProductsClientViewProps) {
             </AnimatePresence>
           </motion.div>
 
-          {/* Pagination Controls */}
           {data.totalPages > 1 && (
             <div className="mt-8 flex justify-center items-center gap-4">
               <Button
