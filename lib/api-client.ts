@@ -24,6 +24,12 @@ export class ApiError extends Error {
 
 import { useAuthStore } from "@/features/auth/store/authStore";
 
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL;
+
+if (!GATEWAY_URL) {
+  throw new Error("Missing NEXT_PUBLIC_GATEWAY_URL environment variable");
+}
+
 async function request<T>(
   baseUrl: string,
   endpoint: string,
@@ -42,10 +48,12 @@ async function request<T>(
   const state = useAuthStore.getState();
   const token = state.accessToken;
 
+  const isFormData = data instanceof FormData;
+
   const config: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...(!isFormData && { 'Content-Type': 'application/json' }),
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...headers,
     },
@@ -53,7 +61,7 @@ async function request<T>(
   };
 
   if (data) {
-    config.body = JSON.stringify(data);
+    config.body = isFormData ? data : JSON.stringify(data);
   }
 
   try {
@@ -66,8 +74,7 @@ async function request<T>(
 
       if (refreshToken) {
         try {
-          const gatewayUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
-          const refreshRes = await fetch(`${gatewayUrl}/auth/refresh`, {
+          const refreshRes = await fetch(`${GATEWAY_URL}/auth/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: refreshToken,
@@ -138,14 +145,12 @@ async function request<T>(
   }
 }
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8080';
-
 // Service-specific clients
 export const catalogApi = {
   get: <T>(endpoint: string, options?: RequestOptions) => 
-    request<T>(GATEWAY_URL, `/api${endpoint}`, 'GET', options),
+    request<T>(GATEWAY_URL, endpoint, 'GET', options),
   post: <T>(endpoint: string, data?: any, options?: RequestOptions) => 
-    request<T>(GATEWAY_URL, `/api${endpoint}`, 'POST', { ...options, data }),
+    request<T>(GATEWAY_URL, endpoint, 'POST', { ...options, data }),
 };
 
 export const orderApi = {
