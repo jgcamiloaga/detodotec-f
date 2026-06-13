@@ -1,6 +1,8 @@
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 
+const ASSETS_BASE_URL = process.env.NEXT_PUBLIC_ASSETS_BASE_URL;
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -50,6 +52,10 @@ export function getSafeImageUrl(url: string | undefined | null): string {
   if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("data:") || url.startsWith("/")) {
     return url;
   }
-  // Si es un path relativo que no empieza con /, asumimos que es del bucket S3
-  return `https://amzn-dtt-s3-rob.s3.us-east-2.amazonaws.com/${url}`;
+  if (!ASSETS_BASE_URL) {
+    throw new Error("Missing NEXT_PUBLIC_ASSETS_BASE_URL environment variable");
+  }
+
+  // Si es un path relativo que no empieza con /, asumimos que viene del bucket configurado.
+  return `${ASSETS_BASE_URL.replace(/\/$/, "")}/${url}`;
 }
