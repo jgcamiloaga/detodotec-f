@@ -53,7 +53,7 @@ async function request<T>(
   const config: RequestInit = {
     method,
     headers: {
-      ...(!isFormData && { 'Content-Type': 'application/json' }),
+      ...(!isFormData && data && { 'Content-Type': 'application/json' }),
       ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
       ...headers,
     },
