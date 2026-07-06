@@ -29,6 +29,7 @@ export function Header() {
   const pathname = usePathname();
   const router = useRouter();
 
+  const [mounted, setMounted] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
@@ -39,14 +40,16 @@ export function Header() {
   const { getTotalItems, getTotalPrice, toggleCart } = useCartStore();
   const { user, isAuthenticated, logout } = useAuthStore();
 
-  const totalItems = getTotalItems();
-  const totalPrice = getTotalPrice();
+  const totalItems = mounted ? getTotalItems() : 0;
+  const totalPrice = mounted ? getTotalPrice() : 0;
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
 
   useEffect(() => {
     setIsMobileOpen(false);
