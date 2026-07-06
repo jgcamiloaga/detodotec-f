@@ -37,28 +37,37 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<User> {
-    const user = await authApi.get<User>('/users/me');
-
-    user.role = "customer";
-
     if (typeof window !== "undefined") {
-      try {
-        const token = useAuthStore.getState().accessToken;
-        if (token) {
+      const token = useAuthStore.getState().accessToken;
+      if (token) {
+        try {
           const payloadBase64 = token.split('.')[1];
           const payloadJson = JSON.parse(atob(payloadBase64));
-          if (payloadJson.authorities && payloadJson.authorities.includes("ROLE_ADMIN")) {
-            user.role = "admin";
-          }
+          const name = `${payloadJson.firstName || ""} ${payloadJson.lastName || ""}`.trim();
+          return {
+            id: payloadJson.userId,
+            name: name || payloadJson.sub || "Usuario",
+            email: payloadJson.email,
+            role: payloadJson.authorities && payloadJson.authorities.includes("ROLE_ADMIN") ? "admin" : "customer"
+          };
+        } catch (e) {
+          console.error("Failed to decode token", e);
         }
-      } catch (e) {
-        console.error("Failed to decode token for role", e);
       }
     }
-    return user;
+    throw new Error("No authenticated user found");
   },
 
   async getUserById(id: string): Promise<User> {
     return authApi.get<User>(`/users/${id}`);
+  },
+
+  async verifyUser(code: string, email: string): Promise<void> {
+    return authApi.post<void>('/users/verify', { code, email });
+  },
+
+  async resendCode(email: string): Promise<void> {
+    return authApi.post<void>('/users/resend-code', null, { params: { email } });
   }
 };
+
